@@ -1,0 +1,110 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+\title{Barrido y Detecci\'on de Datos IPC en Servidores Bancarios}
+\author{Equipo de Seguridad - Santander}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Objetivo}
+El objetivo de este documento es describir el procedimiento para identificar y eliminar información sensible de los servidores de la institución bancaria, enfocándonos en números de tarjeta de crédito y CURP como primera fase.
+
+\section{Metodología}
+Para la detección de datos personales se implementará un script en Python que recorra los archivos almacenados en los servidores y analice su contenido en busca de patrones específicos.
+
+\subsection{Fase 1: Identificación de Datos Sensibles}
+Se priorizará la detección de:
+\begin{itemize}
+    \item Números de tarjeta de crédito/débito
+    \item CURP
+\end{itemize}
+
+\subsection{Estructura del Algoritmo}
+El script seguirá estos pasos:
+\begin{enumerate}
+    \item Recorrer los archivos en los servidores utilizando \texttt{os.walk()}.
+    \item Extraer texto de documentos en distintos formatos:
+    \begin{itemize}
+        \item PDF: \texttt{PyMuPDF} o \texttt{pdfminer.six}
+        \item Word (DOCX): \texttt{python-docx}
+        \item Excel (XLSX): \texttt{pandas} y \texttt{openpyxl}
+        \item TXT y CSV: Lectura directa
+    \end{itemize}
+    \item Buscar patrones específicos con expresiones regulares.
+    \item Validar números de tarjeta con el \textbf{Algoritmo de Luhn}.
+    \item Generar un reporte en formato CSV con los archivos detectados.
+\end{enumerate}
+
+\section{Expresiones Regulares}
+\subsection{Detección de Números de Tarjeta de Crédito}
+Se usará la siguiente expresión regular para identificar posibles números de tarjeta:
+\begin{lstlisting}[language=Python]
+import re
+pattern_card = r'(?:\d{4}[-\s]?){3}\d{4}'
+\end{lstlisting}
+
+\textbf{Validación con Algoritmo de Luhn}:
+\begin{lstlisting}[language=Python]
+def luhn_checksum(card_number):
+    digits = [int(d) for d in card_number if d.isdigit()]
+    checksum = 0
+    dbl = False
+    for d in reversed(digits):
+        if dbl:
+            d *= 2
+            if d > 9:
+                d -= 9
+        checksum += d
+        dbl = not dbl
+    return checksum % 10 == 0
+\end{lstlisting}
+
+\subsection{Detección de CURP}
+El formato estándar de CURP en México se detectará con:
+\begin{lstlisting}[language=Python]
+pattern_curp = r'^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]{2}$'
+\end{lstlisting}
+
+\section{Entrada y Salida de Datos}
+
+\subsection{Entrada (Input)}
+El script tomará como entrada:
+\begin{itemize}
+    \item Directorio raíz donde se encuentran los archivos a analizar.
+    \item Tipos de archivos a escanear: PDF, DOCX, XLSX, TXT, CSV.
+\end{itemize}
+
+\subsection{Salida (Output)}
+El resultado del análisis se almacenará en un archivo CSV con la siguiente estructura:
+
+\begin{longtable}{|c|l|l|l|c|}
+    \hline
+    \textbf{Número de Documento} & \textbf{Ruta del Documento} & \textbf{Nombre del Documento} & \textbf{Formato} & \textbf{Datos IPC Expuestos} \\
+    \hline
+    1 & /ruta/al/archivo1.pdf & archivo1.pdf & PDF & Sí \\
+    2 & /ruta/al/archivo2.docx & archivo2.docx & DOCX & No \\
+    \hline
+\end{longtable}
+
+Cada fila del CSV representará un archivo analizado, indicando si contiene información sensible detectada.
+
+\section{Reporte de Resultados}
+El archivo CSV generado contendrá información detallada sobre los archivos que contengan información sensible detectada. Esto permitirá priorizar la eliminación o cifrado de archivos críticos.
+
+\section{Escalamiento del Proyecto}
+Después de la identificación de números de tarjeta y CURP, se evaluará la detección de:
+\begin{itemize}
+    \item RFC
+    \item Claves bancarias
+    \item Información de clientes
+\end{itemize}
+
+\end{document}
+5547182015654941
