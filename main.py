@@ -70,13 +70,15 @@ def process_file(args):
         sensitive_data_type.append("CURP")
         sensitive_data_numbers.extend(found_curps)
 
-    has_sensitive_data = "Sí" if sensitive_data_type else "No"
+    # 🚀 **Filtro: Solo incluir archivos que tengan al menos 2 datos sensibles**
+    if len(sensitive_data_numbers) < 2:
+        return None  # Ignorar archivo si tiene menos de 2 datos expuestos
 
     return [
-        doc_number, root, file, ext, has_sensitive_data,
+        doc_number, root, file, ext, "Sí",  # Solo llega aquí si cumple la condición
         ", ".join(matched_keywords),  # Palabras clave encontradas
-        ", ".join(sensitive_data_type) if sensitive_data_type else "N/A",  # Tipo de dato (Tarjeta o CURP)
-        ", ".join(sensitive_data_numbers) if sensitive_data_numbers else "N/A"  # Números detectados
+        ", ".join(sensitive_data_type),  # Tipo de dato (Tarjeta o CURP)
+        ", ".join(sensitive_data_numbers)  # Números detectados
     ]
 
 def scan_files(base_dir):
