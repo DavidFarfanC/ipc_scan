@@ -94,5 +94,3 @@ results/ipc_report.csv
 
 🚀 ¡Contribuciones y mejoras son bienvenidas!
 ```
-
----
