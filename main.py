@@ -7,9 +7,34 @@ from scripts.extract_text import extract_text
 from scripts.scan_cards import detect_credit_cards
 from scripts.scan_curp import detect_curp
 
+# 🔍 Lista de palabras clave para filtrado
+KEYWORDS = [
+    "#DE REGISTRO CTA", "# DE REGISTRO RECHAZADO", "ACEPTADA", "ADF", "afiliacion", "BANCO", "BUC",
+    "CANAL", "Card", "CC", "CLAVE OFICIAL", "CLIENTE", "COBRADA", "Código de cliente",
+    "Comercio Nombre", "CON_DISPERSIÖN", "CONTAR POR SUCURSAL", "Contrato", "CREDITO",
+    "CUENTA", "CVV", "DESC_MOTIVO_RECHAZO", "DIAS DE ATRASO", "Divisa", "DOCUMENTADA",
+    "EFECTIVA", "EFEC", "EJECUTIVO", "ESTATUS", "ESTATUS EXP", "ESTATUS REP", "EXPEDIENTE",
+    "FECHA", "FECHA DE EMISIÓN", "FECHA DE ENVIO", "FECHA_1RA_DISP", "fecha_de_transaccion1",
+    "FECHA_SOLICITUD", "FOLIO_CANCELACION", "FORMA DE PAGO", "Grupo", "ID_CUENTA_ORDENANTE",
+    "ID_EJECUTIVO", "ID_SUCURSAL", "ID_ZONA", "importe", "INTERVENTOR", "mcc", "medio_de_acceso",
+    "MODELO", "modo_de_entrada", "MOTIVO DE RECHAZO", "No. DE TARJETA", "Nombre", "NOMBRE EJECUTIVO",
+    "NOMBRE SUC", "NUM DE CUENTA", "Number", "Numero", "numero_autorizacion", "numero_de_tarjeta",
+    "numero_tarjeta", "POLIZA", "POLIZA X EJECUTIVO", "PRIMA", "RAMO", "Razón social",
+    "REGION CON CENTRO PYME", "SUC", "SUCURSAL", "Tarjeta", "TDC", "terminal_del_commercio",
+    "Tipo", "Tipos de cuenta", "ZONA", "VALIDACION ADF", "SEG REGIONAL", "American Express",
+    "MasterCard", "Visa", "Discover", "PIN", "PAN", "CVC", "CAV", "CSC", "CID", "CAV2", "CVC2", "CVV2"
+]
+
+def get_matching_keywords(text):
+    """
+    Encuentra las palabras clave que están en el texto.
+    """
+    found_keywords = [kw for kw in KEYWORDS if kw.lower() in text.lower()]
+    return found_keywords if len(found_keywords) >= 2 else None
+
 def process_file(args):
     """
-    Procesa un solo archivo: extrae texto y detecta IPC.
+    Procesa un solo archivo: extrae texto, filtra por palabras clave y detecta IPC.
     """
     root, file, doc_number = args
     file_path = os.path.join(root, file)
@@ -24,13 +49,35 @@ def process_file(args):
     if text is None:
         return None
 
+    # 🚀 **Filtro: solo analizar archivos con al menos 2 palabras clave**
+    matched_keywords = get_matching_keywords(text)
+    if not matched_keywords:
+        return None  # Ignorar archivo
 
     # Análisis de datos IPC
     found_cards = detect_credit_cards(text)
     found_curps = detect_curp(text)
-    has_sensitive_data = "Sí" if found_cards or found_curps else "No"
 
-    return [doc_number, root, file, ext, has_sensitive_data]
+    # Determinar el tipo de dato encontrado y el número detectado
+    sensitive_data_type = []
+    sensitive_data_numbers = []
+
+    if found_cards:
+        sensitive_data_type.append("Tarjeta")
+        sensitive_data_numbers.extend(found_cards)
+    
+    if found_curps:
+        sensitive_data_type.append("CURP")
+        sensitive_data_numbers.extend(found_curps)
+
+    has_sensitive_data = "Sí" if sensitive_data_type else "No"
+
+    return [
+        doc_number, root, file, ext, has_sensitive_data,
+        ", ".join(matched_keywords),  # Palabras clave encontradas
+        ", ".join(sensitive_data_type) if sensitive_data_type else "N/A",  # Tipo de dato (Tarjeta o CURP)
+        ", ".join(sensitive_data_numbers) if sensitive_data_numbers else "N/A"  # Números detectados
+    ]
 
 def scan_files(base_dir):
     """
@@ -68,7 +115,10 @@ def scan_files(base_dir):
     # Guardar resultados en CSV
     with open(output_file, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Número de Documento", "Ruta", "Nombre", "Formato", "Datos IPC Expuestos"])
+        writer.writerow([
+            "Número de Documento", "Ruta", "Nombre", "Formato", "Datos IPC Expuestos",
+            "Palabras Clave Encontradas", "Tipo de Dato Sensible", "Número Detectado"
+        ])
         writer.writerows(results)
 
     print(f"\n✅ Análisis completado. Resultados guardados en: {output_file}")
