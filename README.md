@@ -91,6 +91,4 @@ results/ipc_report.csv
 ## 👨‍💻 Autor
 **David Farfán**  
 📍 Proyecto desarrollado para detección de IPC en archivos.  
-
 🚀 ¡Contribuciones y mejoras son bienvenidas!
-```
