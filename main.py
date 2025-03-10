@@ -79,7 +79,10 @@ def scan_files(base_dir):
 
     print(f"\n✅ Análisis completado. Resultados guardados en: {output_file}")
 
+# 🔹 Protegemos la ejecución principal
 if __name__ == "__main__":
+    multiprocessing.freeze_support()  # ✅ NECESARIO para PyInstaller en Windows y Mac
+
     # Pedir ruta al usuario solo una vez
     BASE_DIR = input("📂 Ingrese la carpeta donde quiere buscar datos sensibles: ").strip()
 
