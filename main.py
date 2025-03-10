@@ -7,13 +7,6 @@ from scripts.extract_text import extract_text
 from scripts.scan_cards import detect_credit_cards
 from scripts.scan_curp import detect_curp
 
-# ✅ Configurar el método de multiprocessing adecuado según el sistema
-if platform.system() == "Windows":
-    multiprocessing.set_start_method("spawn", force=True)  # Windows usa "spawn"
-
-# Detectar la cantidad de procesos óptima (CPU - 1, mínimo 1)
-NUM_PROCESOS = max(1, multiprocessing.cpu_count() - 1)
-
 def process_file(args):
     """
     Procesa un solo archivo: extrae texto y detecta IPC.
@@ -26,10 +19,11 @@ def process_file(args):
     if file.startswith("~$"):
         return None
 
-    # Extraer texto del archivo
+    # Extraer texto del archivo solo si es un tipo soportado
     text = extract_text(file_path)
-    if not text:
+    if text is None:
         return None
+
 
     # Análisis de datos IPC
     found_cards = detect_credit_cards(text)
@@ -79,9 +73,13 @@ def scan_files(base_dir):
 
     print(f"\n✅ Análisis completado. Resultados guardados en: {output_file}")
 
-# 🔹 Protegemos la ejecución principal
+# 🔹 Bloque principal
 if __name__ == "__main__":
     multiprocessing.freeze_support()  # ✅ NECESARIO para PyInstaller en Windows y Mac
+
+    # Configurar multiprocessing en Windows
+    if platform.system() == "Windows":
+        multiprocessing.set_start_method("spawn", force=True)  # ✅ Obligatorio en Windows con PyInstaller
 
     # Pedir ruta al usuario solo una vez
     BASE_DIR = input("📂 Ingrese la carpeta donde quiere buscar datos sensibles: ").strip()
@@ -98,6 +96,9 @@ if __name__ == "__main__":
     if not os.path.isdir(BASE_DIR):
         print(f"❌ La ruta ingresada no es válida o no existe: {BASE_DIR}")
         exit(1)
+
+    # Detectar la cantidad de procesos óptima (CPU - 1, mínimo 1)
+    NUM_PROCESOS = max(1, multiprocessing.cpu_count() - 1)
 
     # Ejecutar escaneo
     scan_files(BASE_DIR)
