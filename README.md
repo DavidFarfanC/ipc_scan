@@ -1,13 +1,13 @@
-
 # 📂 IPC Scan - Detección de Datos Sensibles en Archivos
 
-**IPC Scan** es un sistema de escaneo para identificar datos sensibles en archivos dentro de un directorio específico. 
-Se centra en la detección de **números de tarjetas de crédito/débito** y **CURP** utilizando expresiones regulares 
+**IPC Scan** es un sistema de escaneo para identificar datos sensibles en archivos dentro de un directorio específico.  
+Se centra en la detección de **números de tarjetas de crédito/débito** y **CURP**, utilizando expresiones regulares  
 y validación con el **Algoritmo de Luhn**.
 
 ---
 
 ## 🚀 Características
+✅ **Optimización con Multiprocessing:** Usa **todos los núcleos de la CPU** para procesar archivos en paralelo.  
 ✅ **Escaneo automático** en archivos **PDF, DOCX, XLSX, TXT y CSV**.  
 ✅ **Detección de información sensible** (Números de tarjeta, CURP).  
 ✅ **Validación de tarjetas con el Algoritmo de Luhn**.  
@@ -44,7 +44,7 @@ Asegúrate de tener **Python 3.8+** instalado y ejecuta:
 pip install -r requirements.txt
 ```
 
-### 2️⃣ **Ejecutar el escaneo**
+### 2️⃣ **Ejecutar el escaneo con multiprocessing**
 Corre el script principal:
 ```bash
 python3 main.py
@@ -64,11 +64,12 @@ results/ipc_report.csv
 ## 🏗️ Cómo Funciona
 
 1. **Escanea todos los archivos** en la carpeta seleccionada y sus subcarpetas.
-2. **Extrae texto** de cada archivo usando librerías como `pdfminer.six`, `python-docx`, y `pandas`.
-3. **Aplica expresiones regulares** para encontrar CURPs y números de tarjeta.
-4. **Valida los números de tarjeta** con el **Algoritmo de Luhn** para filtrar falsos positivos.
-5. **Muestra una barra de progreso (`tqdm`)** y **omite archivos temporales** (`~$archivo.docx`).
-6. **Guarda los resultados en un CSV** con los archivos analizados.
+2. **Usa multiprocessing** para procesar múltiples archivos en paralelo (más rápido en CPU con varios núcleos).
+3. **Extrae texto** de cada archivo usando librerías como `pdfminer.six`, `python-docx`, y `pandas`.
+4. **Aplica expresiones regulares** para encontrar CURPs y números de tarjeta.
+5. **Valida los números de tarjeta** con el **Algoritmo de Luhn** para filtrar falsos positivos.
+6. **Muestra una barra de progreso (`tqdm`)** y **omite archivos temporales** (`~$archivo.docx`).
+7. **Guarda los resultados en un CSV** con los archivos analizados.
 
 ---
 
@@ -78,6 +79,13 @@ results/ipc_report.csv
 | 1 | /Users/david/Downloads/ | test1.pdf | PDF | Sí |
 | 2 | /Users/david/Downloads/ | test2.docx | DOCX | No |
 | 3 | /Users/david/Downloads/ | test3.xlsx | XLSX | Sí |
+
+---
+
+## 📌 ¿Por Qué Multiprocessing es Mejor?
+✅ **Usa todos los núcleos de la CPU**, acelerando el escaneo hasta **8 veces más rápido** en PCs con 8 núcleos.  
+✅ **Cada archivo se procesa en paralelo**, en lugar de esperar uno por uno.  
+✅ **Funciona automáticamente en Windows y Mac/Linux sin configuración adicional**.  
 
 ---
 
