@@ -7,6 +7,10 @@ from scripts.extract_text import extract_text
 from scripts.scan_cards import detect_credit_cards
 from scripts.scan_curp import detect_curp
 
+# ✅ Configurar el método de multiprocessing adecuado según el sistema
+if platform.system() == "Windows":
+    multiprocessing.set_start_method("spawn", force=True)  # Windows usa "spawn"
+
 # Detectar la cantidad de procesos óptima (CPU - 1, mínimo 1)
 NUM_PROCESOS = max(1, multiprocessing.cpu_count() - 1)
 
